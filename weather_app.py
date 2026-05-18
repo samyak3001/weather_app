@@ -109,6 +109,11 @@ st.markdown("""
     transform: scale(1.02);
 }
 
+.stSelectbox label {
+    font-size: 20px;
+    font-weight: bold;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -121,11 +126,11 @@ st.markdown(
 )
 
 # =========================
-# 🔍 SEARCH CITY
+# 📍 CITY SEARCH
 # =========================
-search = st.text_input(
-    "🔍 Search City",
-    placeholder="Enter city name..."
+search_city = st.text_input(
+    "📍 Search City",
+    placeholder="Search any city in the world..."
 )
 
 lat = None
@@ -135,13 +140,13 @@ selected = None
 # =========================
 # 🌍 GEO API
 # =========================
-if search:
+if search_city:
 
     try:
 
         geo_url = (
             f"https://api.openweathermap.org/geo/1.0/direct?"
-            f"q={search}&limit=5&appid={API_KEY}"
+            f"q={search_city}&limit=5&appid={API_KEY}"
         )
 
         geo_response = requests.get(geo_url)
@@ -158,34 +163,16 @@ if search:
                 ]
 
                 # =========================
-                # ✅ AUTO SELECT SINGLE CITY
+                # 🌍 LOCATION DROPDOWN
                 # =========================
-                if len(options) == 1:
+                selected = st.selectbox(
+                    "🌍 Available Locations",
+                    options
+                )
 
-                    selected = options[0]
-
-                    st.markdown(
-                        f"""
-                        <div class='center'
-                        style='font-size:20px;margin-top:10px;'>
-                        📍 {selected}
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-
-                    selected_city = geo_data[0]
-
-                else:
-
-                    selected = st.selectbox(
-                        "Select City",
-                        options
-                    )
-
-                    selected_city = geo_data[
-                        options.index(selected)
-                    ]
+                selected_city = geo_data[
+                    options.index(selected)
+                ]
 
                 lat = selected_city["lat"]
                 lon = selected_city["lon"]
@@ -206,13 +193,17 @@ if lat is not None and lon is not None:
 
     try:
 
-        # Current Weather API
+        # =========================
+        # WEATHER API
+        # =========================
         weather_url = (
             f"https://api.openweathermap.org/data/2.5/weather?"
             f"lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
         )
 
-        # Forecast API
+        # =========================
+        # FORECAST API
+        # =========================
         forecast_url = (
             f"https://api.openweathermap.org/data/2.5/forecast?"
             f"lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
@@ -240,7 +231,7 @@ if lat is not None and lon is not None:
             timezone_offset = data["timezone"]
 
             # =========================
-            # 🎨 BACKGROUND
+            # 🎨 DYNAMIC BACKGROUND
             # =========================
             bg = get_bg(weather, temp)
 
@@ -282,7 +273,7 @@ if lat is not None and lon is not None:
             current_date = local_time.strftime("%A, %d %B")
 
             # =========================
-            # 📍 MAIN DISPLAY
+            # 📍 MAIN WEATHER DISPLAY
             # =========================
             st.markdown(
                 f"<h2 class='center'>{selected}</h2>",
@@ -322,7 +313,7 @@ if lat is not None and lon is not None:
             st.markdown("---")
 
             # =========================
-            # 🌅 SUNRISE / SUNSET
+            # 🌅 SUNRISE & SUNSET
             # =========================
             sunrise = (
                 datetime.utcfromtimestamp(data["sys"]["sunrise"])

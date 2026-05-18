@@ -123,7 +123,10 @@ st.markdown(
 # =========================
 # 🔍 SEARCH CITY
 # =========================
-search = st.text_input("🔍 Search City")
+search = st.text_input(
+    "🔍 Search City",
+    placeholder="Enter city name..."
+)
 
 lat = None
 lon = None
@@ -154,12 +157,35 @@ if search:
                     for c in geo_data
                 ]
 
-                selected = st.selectbox(
-                    "Select City",
-                    options
-                )
+                # =========================
+                # ✅ AUTO SELECT SINGLE CITY
+                # =========================
+                if len(options) == 1:
 
-                selected_city = geo_data[options.index(selected)]
+                    selected = options[0]
+
+                    st.markdown(
+                        f"""
+                        <div class='center'
+                        style='font-size:20px;margin-top:10px;'>
+                        📍 {selected}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+                    selected_city = geo_data[0]
+
+                else:
+
+                    selected = st.selectbox(
+                        "Select City",
+                        options
+                    )
+
+                    selected_city = geo_data[
+                        options.index(selected)
+                    ]
 
                 lat = selected_city["lat"]
                 lon = selected_city["lon"]
@@ -180,13 +206,13 @@ if lat is not None and lon is not None:
 
     try:
 
-        # Current Weather
+        # Current Weather API
         weather_url = (
             f"https://api.openweathermap.org/data/2.5/weather?"
             f"lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
         )
 
-        # Forecast
+        # Forecast API
         forecast_url = (
             f"https://api.openweathermap.org/data/2.5/forecast?"
             f"lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
@@ -206,7 +232,6 @@ if lat is not None and lon is not None:
             pressure = data["main"]["pressure"]
 
             weather = data["weather"][0]["description"]
-            weather_main = data["weather"][0]["main"]
 
             wind_speed = data["wind"]["speed"]
 

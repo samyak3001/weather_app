@@ -4,81 +4,142 @@ from datetime import datetime, timedelta
 import plotly.express as px
 import pandas as pd
 
-# =====================================================
+# =========================================================
 # PAGE CONFIG
-# =====================================================
+# =========================================================
 st.set_page_config(
     page_title="iWeather Pro",
     page_icon="🌦",
     layout="wide"
 )
 
-# =====================================================
+# =========================================================
 # API KEY
-# =====================================================
+# =========================================================
 API_KEY = "96c73ea634856d67ace6716d27c2662e"
 
-# =====================================================
+# =========================================================
 # WEATHER ICONS
-# =====================================================
+# =========================================================
 def get_icon(weather, hour):
 
     weather = weather.lower()
 
+    # CLEAR
     if "clear" in weather:
         return "🌙" if hour >= 18 or hour <= 5 else "☀️"
+
+    # CLOUDS
+    if "few clouds" in weather:
+        return "🌤"
+
+    if "scattered clouds" in weather:
+        return "⛅"
+
+    if "broken clouds" in weather:
+        return "☁️"
 
     if "cloud" in weather:
         return "☁️"
 
-    if "rain" in weather:
-        return "🌧"
-
+    # DRIZZLE
     if "drizzle" in weather:
         return "🌦"
 
-    if "thunder" in weather:
+    # LIGHT RAIN
+    if "light rain" in weather:
+        return "🌦"
+
+    # MODERATE RAIN
+    if "moderate rain" in weather:
+        return "🌧"
+
+    # HEAVY RAIN
+    if "heavy" in weather:
         return "⛈"
 
+    # THUNDER
+    if "thunder" in weather:
+        return "⚡"
+
+    # SNOW
     if "snow" in weather:
         return "❄️"
 
+    # MIST / HAZE
     if (
         "mist" in weather
         or "fog" in weather
         or "haze" in weather
+        or "smoke" in weather
     ):
         return "🌫"
 
     return "🌤"
 
-# =====================================================
+# =========================================================
 # BACKGROUND IMAGES
-# =====================================================
+# =========================================================
 def get_background(weather):
 
     weather = weather.lower()
 
+    # CLEAR SKY
     if "clear" in weather:
-        return "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1920"
+        return (
+            "https://images.unsplash.com/"
+            "photo-1500530855697-b586d89ba3ee?w=1920"
+        )
 
-    if "cloud" in weather:
-        return "https://images.unsplash.com/photo-1499346030926-9a72daac6c63?w=1920"
+    # CLOUDS
+    elif "cloud" in weather:
+        return (
+            "https://images.unsplash.com/"
+            "photo-1499346030926-9a72daac6c63?w=1920"
+        )
 
-    if "rain" in weather:
-        return "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=1920"
+    # RAIN
+    elif "rain" in weather:
+        return (
+            "https://images.unsplash.com/"
+            "photo-1515694346937-94d85e41e6f0?w=1920"
+        )
 
-    if "thunder" in weather:
-        return "https://images.unsplash.com/photo-1500673922987-e212871fec22?w=1920"
+    # THUNDER
+    elif "thunder" in weather:
+        return (
+            "https://images.unsplash.com/"
+            "photo-1500673922987-e212871fec22?w=1920"
+        )
 
-    if "snow" in weather:
-        return "https://images.unsplash.com/photo-1517299321609-52687d1bc55a?w=1920"
+    # SNOW
+    elif "snow" in weather:
+        return (
+            "https://images.unsplash.com/"
+            "photo-1517299321609-52687d1bc55a?w=1920"
+        )
 
-    return "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1920"
+    # MIST / FOG / HAZE
+    elif (
+        "mist" in weather
+        or "fog" in weather
+        or "haze" in weather
+        or "smoke" in weather
+    ):
+        return (
+            "https://images.unsplash.com/"
+            "photo-1485236715568-ddc5ee6ca227?w=1920"
+        )
 
-# =====================================================
-# GET WEATHER
-# =====================================================
+    # DEFAULT
+    return (
+        "https://images.unsplash.com/"
+        "photo-1502082553048-f009c37129b9?w=1920"
+    )
+
+# =========================================================
+# WEATHER API
+# =========================================================
 @st.cache_data(ttl=600)
 def get_weather(city):
 
@@ -104,9 +165,9 @@ def get_weather(city):
 
     return current, forecast
 
-# =====================================================
-# GET AQI
-# =====================================================
+# =========================================================
+# AIR QUALITY API
+# =========================================================
 @st.cache_data(ttl=600)
 def get_aqi(lat, lon):
 
@@ -120,9 +181,9 @@ def get_aqi(lat, lon):
         timeout=10
     ).json()
 
-# =====================================================
+# =========================================================
 # CSS
-# =====================================================
+# =========================================================
 st.markdown("""
 <style>
 
@@ -145,43 +206,51 @@ h1, h2, h3, h4, p, label {
 }
 
 .stTextInput input {
-    background-color: rgba(255,255,255,0.1);
+    background-color: rgba(255,255,255,0.12);
     color: white;
+    border-radius: 12px;
+}
+
+.block-container {
+    padding-top: 2rem;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# =====================================================
+# =========================================================
 # TITLE
-# =====================================================
+# =========================================================
 st.title("🌦 iWeather Pro")
 
 st.caption("Real-Time Smart Weather Dashboard")
 
-# =====================================================
+# =========================================================
 # SEARCH
-# =====================================================
+# =========================================================
 city = st.text_input(
     "📍 Enter City Name",
     placeholder="Search city..."
 )
 
-# =====================================================
+# =========================================================
 # WEATHER SECTION
-# =====================================================
-if city:
+# =========================================================
+if city.strip():
 
     try:
 
-        with st.spinner("Fetching weather..."):
+        with st.spinner("Fetching weather data..."):
 
             current, forecast = get_weather(city)
 
+        # =========================================================
+        # VALID CITY
+        # =========================================================
         if str(current.get("cod")) == "200":
 
             # =====================================================
-            # DATA
+            # MAIN WEATHER DATA
             # =====================================================
             temp = round(current["main"]["temp"])
 
@@ -202,14 +271,17 @@ if city:
 
             weather = current["weather"][0]["description"]
 
-            timezone = current["timezone"]
-
             country = current["sys"]["country"]
 
             lat = current["coord"]["lat"]
 
             lon = current["coord"]["lon"]
 
+            timezone = current["timezone"]
+
+            # =====================================================
+            # LOCAL TIME
+            # =====================================================
             local_time = (
                 datetime.utcnow()
                 + timedelta(seconds=timezone)
@@ -217,16 +289,24 @@ if city:
 
             hour = local_time.hour
 
-            icon = get_icon(
-                weather,
-                hour
+            formatted_time = local_time.strftime(
+                "%I:%M %p"
+            )
+
+            formatted_date = local_time.strftime(
+                "%A, %d %B %Y"
             )
 
             # =====================================================
-            # BACKGROUND
+            # ICON + BACKGROUND
             # =====================================================
+            icon = get_icon(weather, hour)
+
             bg = get_background(weather)
 
+            # =====================================================
+            # APPLY BACKGROUND
+            # =====================================================
             st.markdown(
                 f"""
                 <style>
@@ -234,12 +314,14 @@ if city:
                 .stApp {{
                     background:
                         linear-gradient(
-                            rgba(0,0,0,0.5),
-                            rgba(0,0,0,0.5)
+                            rgba(0,0,0,0.45),
+                            rgba(0,0,0,0.55)
                         ),
                         url("{bg}");
 
                     background-size: cover;
+                    background-position: center;
+                    background-attachment: fixed;
                 }}
 
                 </style>
@@ -248,7 +330,7 @@ if city:
             )
 
             # =====================================================
-            # MAIN INFO
+            # MAIN DISPLAY
             # =====================================================
             st.markdown("---")
 
@@ -265,7 +347,11 @@ if city:
             )
 
             st.markdown(
-                f"🕒 {local_time.strftime('%I:%M %p')}"
+                f"🕒 {formatted_time}"
+            )
+
+            st.markdown(
+                formatted_date
             )
 
             st.markdown("---")
@@ -294,7 +380,7 @@ if city:
 
             c4.metric(
                 "🤗 Feels Like",
-                f"{feels}°"
+                f"{feels}°C"
             )
 
             c5.metric(
@@ -338,13 +424,13 @@ if city:
             st.markdown("---")
 
             # =====================================================
-            # AQI
+            # AIR QUALITY
             # =====================================================
             aqi_data = get_aqi(lat, lon)
 
             aqi = aqi_data["list"][0]["main"]["aqi"]
 
-            aqi_text = {
+            aqi_map = {
                 1: "Good 😊",
                 2: "Fair 🙂",
                 3: "Moderate 😐",
@@ -356,7 +442,7 @@ if city:
 
             st.metric(
                 "AQI",
-                aqi_text[aqi]
+                aqi_map[aqi]
             )
 
             st.markdown("---")
@@ -372,36 +458,40 @@ if city:
 
             for col, item in zip(cols, hourly):
 
-                f_time = (
+                forecast_time = (
                     datetime.utcfromtimestamp(
                         item["dt"]
                     )
                     + timedelta(seconds=timezone)
                 )
 
-                f_hour = f_time.hour
+                f_hour = forecast_time.hour
 
-                f_temp = round(
+                display_time = forecast_time.strftime(
+                    "%I %p"
+                )
+
+                forecast_temp = round(
                     item["main"]["temp"]
                 )
 
-                f_weather = item[
+                forecast_weather = item[
                     "weather"
                 ][0]["description"]
 
-                f_icon = get_icon(
-                    f_weather,
+                forecast_icon = get_icon(
+                    forecast_weather,
                     f_hour
                 )
 
                 col.metric(
-                    f_time.strftime("%I %p"),
-                    f"{f_temp}°",
-                    f_icon
+                    display_time,
+                    f"{forecast_temp}°",
+                    forecast_icon
                 )
 
                 col.caption(
-                    f_weather.title()
+                    forecast_weather.title()
                 )
 
             st.markdown("---")
@@ -447,7 +537,7 @@ if city:
             st.markdown("---")
 
             # =====================================================
-            # TEMPERATURE CHART
+            # TEMPERATURE TREND CHART
             # =====================================================
             st.subheader("🌡 Temperature Trend")
 
@@ -475,7 +565,12 @@ if city:
                 df,
                 x="Time",
                 y="Temperature",
-                markers=True
+                markers=True,
+                title="Next Hours Temperature"
+            )
+
+            fig.update_layout(
+                template="plotly_dark"
             )
 
             st.plotly_chart(
@@ -486,50 +581,60 @@ if city:
             st.markdown("---")
 
             # =====================================================
-            # PREDICTION
+            # WEATHER PREDICTION
             # =====================================================
-            if st.button(
-                "🔮 Predict Tomorrow"
-            ):
+            st.subheader("🔮 AI Weather Prediction")
 
-                prediction = "☀️ Sunny Tomorrow"
+            if "rain" in weather:
+                prediction = (
+                    "🌧 Rain may continue tomorrow."
+                )
 
-                if "rain" in weather:
-                    prediction = (
-                        "🌧 Rain Expected Tomorrow"
-                    )
+            elif "cloud" in weather:
+                prediction = (
+                    "☁️ Cloudy weather expected tomorrow."
+                )
 
-                elif "cloud" in weather:
-                    prediction = (
-                        "☁️ Cloudy Tomorrow"
-                    )
+            elif "thunder" in weather:
+                prediction = (
+                    "⚡ Thunderstorm chances tomorrow."
+                )
 
-                elif "thunder" in weather:
-                    prediction = (
-                        "⛈ Storm Chances Tomorrow"
-                    )
+            elif temp > 35:
+                prediction = (
+                    "🥵 Very hot weather tomorrow."
+                )
 
-                elif temp > 35:
-                    prediction = (
-                        "🥵 Very Hot Tomorrow"
-                    )
+            elif temp < 18:
+                prediction = (
+                    "❄️ Cold weather tomorrow."
+                )
 
-                elif temp < 18:
-                    prediction = (
-                        "❄️ Cold Tomorrow"
-                    )
+            else:
+                prediction = (
+                    "☀️ Pleasant weather tomorrow."
+                )
 
-                st.success(prediction)
+            st.success(prediction)
 
             st.caption(
                 "🔄 Auto refresh every 10 minutes"
             )
 
+        # =========================================================
+        # INVALID CITY
+        # =========================================================
         else:
             st.error("City not found")
 
+    # =============================================================
+    # ERRORS
+    # =============================================================
     except requests.exceptions.Timeout:
         st.error("Request timed out")
+
+    except requests.exceptions.ConnectionError:
+        st.error("Internet connection issue")
 
     except Exception as e:
         st.error(f"Error: {e}")

@@ -8,7 +8,7 @@ import pandas as pd
 # PAGE CONFIG
 # =========================================================
 st.set_page_config(
-    page_title="iWeather Pro",
+    page_title="iWeather",
     page_icon="🌦",
     layout="wide"
 )
@@ -639,7 +639,7 @@ if city.strip():
                 """
                 ---
                 ### 🌦 iWeather Pro
-                Made with ❤️ by Samyak M
+                Made by Samyak M
                 """
             )
 

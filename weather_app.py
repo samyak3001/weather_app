@@ -92,6 +92,17 @@ st.markdown("""
     box-shadow: 0px 5px 20px rgba(0,0,0,0.35);
 }
 
+.location-card {
+    background: rgba(255,255,255,0.12);
+    padding: 14px;
+    border-radius: 15px;
+    margin-top: 10px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    backdrop-filter: blur(10px);
+}
+
 .stButton > button {
     width: 100%;
     border-radius: 15px;
@@ -126,7 +137,7 @@ st.markdown(
 )
 
 # =========================
-# 📍 CITY SEARCH
+# 📍 SEARCH CITY
 # =========================
 search_city = st.text_input(
     "📍 Search City",
@@ -163,19 +174,42 @@ if search_city:
                 ]
 
                 # =========================
-                # 🌍 LOCATION DROPDOWN
+                # ✅ AUTO SELECT SINGLE CITY
                 # =========================
-                selected = st.selectbox(
-                    "🌍 Available Locations",
-                    options
-                )
+                if len(options) == 1:
 
-                selected_city = geo_data[
-                    options.index(selected)
-                ]
+                    selected = options[0]
 
-                lat = selected_city["lat"]
-                lon = selected_city["lon"]
+                    selected_city = geo_data[0]
+
+                    lat = selected_city["lat"]
+                    lon = selected_city["lon"]
+
+                    st.markdown(
+                        f"""
+                        <div class='location-card'>
+                        📍 {selected}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+                # =========================
+                # 🌍 MULTIPLE LOCATIONS
+                # =========================
+                else:
+
+                    selected = st.selectbox(
+                        "🌍 Available Locations",
+                        options
+                    )
+
+                    selected_city = geo_data[
+                        options.index(selected)
+                    ]
+
+                    lat = selected_city["lat"]
+                    lon = selected_city["lon"]
 
             else:
                 st.error("❌ City not found")
@@ -184,7 +218,7 @@ if search_city:
             st.error("❌ API Error")
 
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"❌ Error: {e}")
 
 # =========================
 # 🌦 WEATHER DATA
@@ -273,7 +307,7 @@ if lat is not None and lon is not None:
             current_date = local_time.strftime("%A, %d %B")
 
             # =========================
-            # 📍 MAIN WEATHER DISPLAY
+            # 📍 MAIN DISPLAY
             # =========================
             st.markdown(
                 f"<h2 class='center'>{selected}</h2>",

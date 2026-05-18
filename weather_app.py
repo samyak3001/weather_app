@@ -16,7 +16,7 @@ st.set_page_config(
 # =========================================================
 # API KEY
 # =========================================================
-API_KEY = "96c73ea634856d67ace6716d27c2662e"
+API_KEY = st.secrets["96c73ea634856d67ace6716d27c2662e"]
 
 # =========================================================
 # WEATHER ICONS
@@ -66,7 +66,7 @@ def get_icon(weather, hour):
     if "snow" in weather:
         return "❄️"
 
-    # MIST / HAZE
+    # MIST / FOG / HAZE
     if (
         "mist" in weather
         or "fog" in weather
@@ -84,7 +84,7 @@ def get_background(weather):
 
     weather = weather.lower()
 
-    # CLEAR SKY
+    # CLEAR
     if "clear" in weather:
         return (
             "https://images.unsplash.com/"
@@ -119,7 +119,7 @@ def get_background(weather):
             "photo-1517299321609-52687d1bc55a?w=1920"
         )
 
-    # MIST / FOG / HAZE
+    # MIST / HAZE
     elif (
         "mist" in weather
         or "fog" in weather
@@ -166,7 +166,7 @@ def get_weather(city):
     return current, forecast
 
 # =========================================================
-# AIR QUALITY API
+# AQI API
 # =========================================================
 @st.cache_data(ttl=600)
 def get_aqi(lat, lon):
@@ -215,6 +215,10 @@ h1, h2, h3, h4, p, label {
     padding-top: 2rem;
 }
 
+[data-testid="column"] {
+    width: 100% !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -240,18 +244,20 @@ if city.strip():
 
     try:
 
-        with st.spinner("Fetching weather data..."):
+        with st.spinner(
+            "🌍 Loading live weather data..."
+        ):
 
             current, forecast = get_weather(city)
 
-        # =========================================================
+        # =====================================================
         # VALID CITY
-        # =========================================================
+        # =====================================================
         if str(current.get("cod")) == "200":
 
-            # =====================================================
-            # MAIN WEATHER DATA
-            # =====================================================
+            # =================================================
+            # MAIN DATA
+            # =================================================
             temp = round(current["main"]["temp"])
 
             feels = round(
@@ -273,15 +279,17 @@ if city.strip():
 
             country = current["sys"]["country"]
 
+            city_name = current["name"]
+
             lat = current["coord"]["lat"]
 
             lon = current["coord"]["lon"]
 
             timezone = current["timezone"]
 
-            # =====================================================
+            # =================================================
             # LOCAL TIME
-            # =====================================================
+            # =================================================
             local_time = (
                 datetime.utcnow()
                 + timedelta(seconds=timezone)
@@ -297,16 +305,16 @@ if city.strip():
                 "%A, %d %B %Y"
             )
 
-            # =====================================================
+            # =================================================
             # ICON + BACKGROUND
-            # =====================================================
+            # =================================================
             icon = get_icon(weather, hour)
 
             bg = get_background(weather)
 
-            # =====================================================
+            # =================================================
             # APPLY BACKGROUND
-            # =====================================================
+            # =================================================
             st.markdown(
                 f"""
                 <style>
@@ -329,13 +337,13 @@ if city.strip():
                 unsafe_allow_html=True
             )
 
-            # =====================================================
+            # =================================================
             # MAIN DISPLAY
-            # =====================================================
+            # =================================================
             st.markdown("---")
 
             st.markdown(
-                f"# {icon} {city.title()}, {country}"
+                f"# {icon} {city_name}, {country}"
             )
 
             st.markdown(
@@ -356,9 +364,9 @@ if city.strip():
 
             st.markdown("---")
 
-            # =====================================================
+            # =================================================
             # WEATHER DETAILS
-            # =====================================================
+            # =================================================
             st.subheader("📊 Weather Details")
 
             c1, c2, c3, c4, c5 = st.columns(5)
@@ -390,9 +398,9 @@ if city.strip():
 
             st.markdown("---")
 
-            # =====================================================
-            # SUNRISE / SUNSET
-            # =====================================================
+            # =================================================
+            # SUN TIMING
+            # =================================================
             sunrise = (
                 datetime.utcfromtimestamp(
                     current["sys"]["sunrise"]
@@ -423,12 +431,21 @@ if city.strip():
 
             st.markdown("---")
 
-            # =====================================================
+            # =================================================
             # AIR QUALITY
-            # =====================================================
+            # =================================================
             aqi_data = get_aqi(lat, lon)
 
-            aqi = aqi_data["list"][0]["main"]["aqi"]
+            aqi = aqi_data.get(
+                "list",
+                [{}]
+            )[0].get(
+                "main",
+                {}
+            ).get(
+                "aqi",
+                1
+            )
 
             aqi_map = {
                 1: "Good 😊",
@@ -447,9 +464,9 @@ if city.strip():
 
             st.markdown("---")
 
-            # =====================================================
+            # =================================================
             # HOURLY FORECAST
-            # =====================================================
+            # =================================================
             st.subheader("⏰ Hourly Forecast")
 
             hourly = forecast["list"][:6]
@@ -484,6 +501,11 @@ if city.strip():
                     f_hour
                 )
 
+                rain = item.get(
+                    "pop",
+                    0
+                ) * 100
+
                 col.metric(
                     display_time,
                     f"{forecast_temp}°",
@@ -494,11 +516,15 @@ if city.strip():
                     forecast_weather.title()
                 )
 
+                col.caption(
+                    f"🌧 {rain:.0f}% chance"
+                )
+
             st.markdown("---")
 
-            # =====================================================
+            # =================================================
             # 5 DAY FORECAST
-            # =====================================================
+            # =================================================
             st.subheader("📅 5-Day Forecast")
 
             daily_data = forecast["list"][::8][:5]
@@ -536,9 +562,9 @@ if city.strip():
 
             st.markdown("---")
 
-            # =====================================================
-            # TEMPERATURE TREND CHART
-            # =====================================================
+            # =================================================
+            # TEMPERATURE CHART
+            # =================================================
             st.subheader("🌡 Temperature Trend")
 
             temps = [
@@ -573,6 +599,10 @@ if city.strip():
                 template="plotly_dark"
             )
 
+            fig.update_traces(
+                line_width=4
+            )
+
             st.plotly_chart(
                 fig,
                 use_container_width=True
@@ -580,9 +610,9 @@ if city.strip():
 
             st.markdown("---")
 
-            # =====================================================
-            # WEATHER PREDICTION
-            # =====================================================
+            # =================================================
+            # AI PREDICTION
+            # =================================================
             st.subheader("🔮 AI Weather Prediction")
 
             if "rain" in weather:
@@ -621,15 +651,20 @@ if city.strip():
                 "🔄 Auto refresh every 10 minutes"
             )
 
-        # =========================================================
-        # INVALID CITY
-        # =========================================================
+            # =================================================
+            # FOOTER
+            # =================================================
+            st.markdown(
+                """
+                ---
+                ### 🌦 iWeather Pro
+                Made with ❤️ by Samyak M
+                """
+            )
+
         else:
             st.error("City not found")
 
-    # =============================================================
-    # ERRORS
-    # =============================================================
     except requests.exceptions.Timeout:
         st.error("Request timed out")
 

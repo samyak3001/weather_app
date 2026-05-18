@@ -16,7 +16,7 @@ st.set_page_config(
 # =========================================================
 # API KEY
 # =========================================================
-API_KEY = st.secrets["96c73ea634856d67ace6716d27c2662e"]
+API_KEY = "96c73ea634856d67ace6716d27c2662e"
 
 # =========================================================
 # WEATHER ICONS
@@ -25,11 +25,9 @@ def get_icon(weather, hour):
 
     weather = weather.lower()
 
-    # CLEAR
     if "clear" in weather:
         return "🌙" if hour >= 18 or hour <= 5 else "☀️"
 
-    # CLOUDS
     if "few clouds" in weather:
         return "🌤"
 
@@ -42,31 +40,24 @@ def get_icon(weather, hour):
     if "cloud" in weather:
         return "☁️"
 
-    # DRIZZLE
     if "drizzle" in weather:
         return "🌦"
 
-    # LIGHT RAIN
     if "light rain" in weather:
         return "🌦"
 
-    # MODERATE RAIN
     if "moderate rain" in weather:
         return "🌧"
 
-    # HEAVY RAIN
     if "heavy" in weather:
         return "⛈"
 
-    # THUNDER
     if "thunder" in weather:
         return "⚡"
 
-    # SNOW
     if "snow" in weather:
         return "❄️"
 
-    # MIST / FOG / HAZE
     if (
         "mist" in weather
         or "fog" in weather
@@ -84,42 +75,36 @@ def get_background(weather):
 
     weather = weather.lower()
 
-    # CLEAR
     if "clear" in weather:
         return (
             "https://images.unsplash.com/"
             "photo-1500530855697-b586d89ba3ee?w=1920"
         )
 
-    # CLOUDS
     elif "cloud" in weather:
         return (
             "https://images.unsplash.com/"
             "photo-1499346030926-9a72daac6c63?w=1920"
         )
 
-    # RAIN
     elif "rain" in weather:
         return (
             "https://images.unsplash.com/"
             "photo-1515694346937-94d85e41e6f0?w=1920"
         )
 
-    # THUNDER
     elif "thunder" in weather:
         return (
             "https://images.unsplash.com/"
             "photo-1500673922987-e212871fec22?w=1920"
         )
 
-    # SNOW
     elif "snow" in weather:
         return (
             "https://images.unsplash.com/"
             "photo-1517299321609-52687d1bc55a?w=1920"
         )
 
-    # MIST / HAZE
     elif (
         "mist" in weather
         or "fog" in weather
@@ -131,7 +116,6 @@ def get_background(weather):
             "photo-1485236715568-ddc5ee6ca227?w=1920"
         )
 
-    # DEFAULT
     return (
         "https://images.unsplash.com/"
         "photo-1502082553048-f009c37129b9?w=1920"
@@ -250,9 +234,6 @@ if city.strip():
 
             current, forecast = get_weather(city)
 
-        # =====================================================
-        # VALID CITY
-        # =====================================================
         if str(current.get("cod")) == "200":
 
             # =================================================
@@ -611,7 +592,7 @@ if city.strip():
             st.markdown("---")
 
             # =================================================
-            # AI PREDICTION
+            # AI WEATHER PREDICTION
             # =================================================
             st.subheader("🔮 AI Weather Prediction")
 

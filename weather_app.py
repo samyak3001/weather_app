@@ -2,63 +2,29 @@ import streamlit as st
 import requests
 from datetime import datetime, timedelta
 
-# =====================================================
+# =========================================
 # PAGE CONFIG
-# =====================================================
+# =========================================
 st.set_page_config(
     page_title="iWeather Pro",
     page_icon="🌦",
     layout="wide"
 )
 
-# =====================================================
+# =========================================
 # API KEY
-# =====================================================
+# =========================================
 API_KEY = "96c73ea634856d67ace6716d27c2662e"
 
-# =====================================================
-# CACHE WEATHER
-# =====================================================
-@st.cache_data(ttl=600)
-def get_weather(city):
-
-    current_url = (
-        "https://api.openweathermap.org/data/2.5/weather"
-        f"?q={city}"
-        f"&appid={API_KEY}"
-        "&units=metric"
-    )
-
-    forecast_url = (
-        "https://api.openweathermap.org/data/2.5/forecast"
-        f"?q={city}"
-        f"&appid={API_KEY}"
-        "&units=metric"
-    )
-
-    current = requests.get(
-        current_url,
-        timeout=10
-    ).json()
-
-    forecast = requests.get(
-        forecast_url,
-        timeout=10
-    ).json()
-
-    return current, forecast
-
-# =====================================================
+# =========================================
 # WEATHER ICONS
-# =====================================================
+# =========================================
 def get_icon(weather, hour):
 
     weather = weather.lower()
 
     if "clear" in weather:
-        if hour >= 18 or hour <= 5:
-            return "🌙"
-        return "☀️"
+        return "🌙" if hour >= 18 or hour <= 5 else "☀️"
 
     if "cloud" in weather:
         return "☁️"
@@ -84,9 +50,9 @@ def get_icon(weather, hour):
 
     return "🌤"
 
-# =====================================================
+# =========================================
 # BACKGROUND
-# =====================================================
+# =========================================
 def get_background(weather, hour):
 
     weather = weather.lower()
@@ -115,14 +81,46 @@ def get_background(weather, hour):
 
     return "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1920"
 
-# =====================================================
+# =========================================
+# API CALL
+# =========================================
+@st.cache_data(ttl=600)
+def get_weather(city):
+
+    weather_url = (
+        "https://api.openweathermap.org/data/2.5/weather"
+        f"?q={city}"
+        f"&appid={API_KEY}"
+        "&units=metric"
+    )
+
+    forecast_url = (
+        "https://api.openweathermap.org/data/2.5/forecast"
+        f"?q={city}"
+        f"&appid={API_KEY}"
+        "&units=metric"
+    )
+
+    weather = requests.get(
+        weather_url,
+        timeout=10
+    ).json()
+
+    forecast = requests.get(
+        forecast_url,
+        timeout=10
+    ).json()
+
+    return weather, forecast
+
+# =========================================
 # CSS
-# =====================================================
+# =========================================
 st.markdown("""
 <style>
 
 html, body, [class*="css"] {
-    font-family: 'Poppins', sans-serif;
+    font-family: sans-serif;
     color: white;
 }
 
@@ -138,101 +136,84 @@ html, body, [class*="css"] {
 
 .title {
     text-align: center;
-    font-size: 75px;
+    font-size: 70px;
     font-weight: bold;
-    margin-bottom: 25px;
-    text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    margin-bottom: 20px;
 }
 
 .glass {
     background: rgba(20,20,30,0.45);
     border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 28px;
-    padding: 30px;
+    border-radius: 25px;
+    padding: 25px;
     backdrop-filter: blur(16px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
 }
 
 .card {
     background: rgba(20,20,30,0.45);
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 22px;
+    border-radius: 20px;
     padding: 20px;
     text-align: center;
-    backdrop-filter: blur(16px);
     margin-top: 10px;
 }
 
 .temp {
     font-size: 120px;
-    font-weight: 300;
     text-align: center;
-}
-
-.stTextInput input {
-    background: rgba(20,20,30,0.45);
-    color: white;
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.2);
+    font-weight: 300;
 }
 
 .stButton button {
     width: 100%;
     height: 55px;
-    border-radius: 16px;
+    border-radius: 15px;
     border: none;
-    color: white;
     font-size: 18px;
     font-weight: bold;
-    background: linear-gradient(
-        135deg,
-        rgba(255,255,255,0.25),
-        rgba(255,255,255,0.1)
-    );
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# =====================================================
+# =========================================
 # TITLE
-# =====================================================
+# =========================================
 st.markdown(
     "<div class='title'>🌦 iWeather Pro</div>",
     unsafe_allow_html=True
 )
 
-# =====================================================
+# =========================================
 # SEARCH
-# =====================================================
+# =========================================
 city = st.text_input(
     "📍 Search City",
     placeholder="Enter city name..."
 )
 
-# =====================================================
-# WEATHER SECTION
-# =====================================================
-if city:
+# =========================================
+# WEATHER
+# =========================================
+if city.strip():
 
     try:
 
         with st.spinner("Fetching weather..."):
 
-            current, forecast = get_weather(city)
+            data, forecast = get_weather(city)
 
-        if current.get("cod") == 200:
+        if str(data.get("cod")) == "200":
 
-            # DATA
-            temp = round(current["main"]["temp"])
-            feels = round(current["main"]["feels_like"])
-            humidity = current["main"]["humidity"]
-            pressure = current["main"]["pressure"]
-            wind = current["wind"]["speed"]
-            visibility = current.get("visibility", 0) / 1000
-            weather = current["weather"][0]["description"]
+            temp = round(data["main"]["temp"])
+            feels = round(data["main"]["feels_like"])
+            humidity = data["main"]["humidity"]
+            pressure = data["main"]["pressure"]
+            wind = data["wind"]["speed"]
+            visibility = data.get("visibility", 0) / 1000
 
-            timezone = current["timezone"]
+            condition = data["weather"][0]["description"]
+
+            timezone = data["timezone"]
 
             local_time = (
                 datetime.utcnow()
@@ -245,13 +226,13 @@ if city:
                 "%A, %d %B"
             )
 
-            time_now = local_time.strftime(
+            current_time = local_time.strftime(
                 "%I:%M %p"
             )
 
-            icon = get_icon(weather, hour)
+            icon = get_icon(condition, hour)
 
-            bg = get_background(weather, hour)
+            bg = get_background(condition, hour)
 
             # BACKGROUND
             st.markdown(
@@ -272,9 +253,7 @@ if city:
                 unsafe_allow_html=True
             )
 
-            # =====================================================
             # MAIN CARD
-            # =====================================================
             st.markdown(
                 f"""
                 <div class="glass">
@@ -288,7 +267,7 @@ if city:
                     </h3>
 
                     <h3 style="text-align:center;">
-                        🕒 {time_now}
+                        🕒 {current_time}
                     </h3>
 
                     <div class="temp">
@@ -296,14 +275,8 @@ if city:
                     </div>
 
                     <h2 style="text-align:center;">
-                        {weather.title()}
+                        {condition.title()}
                     </h2>
-
-                    <h3 style="text-align:center;">
-                        H:{round(current['main']['temp_max'])}°
-                        &nbsp;
-                        L:{round(current['main']['temp_min'])}°
-                    </h3>
 
                 </div>
                 """,
@@ -312,9 +285,7 @@ if city:
 
             st.write("")
 
-            # =====================================================
             # DETAILS
-            # =====================================================
             st.subheader("📊 Weather Details")
 
             details = [
@@ -341,80 +312,27 @@ if city:
 
             st.write("")
 
-            # =====================================================
-            # SUN TIMING
-            # =====================================================
-            sunrise = (
-                datetime.utcfromtimestamp(
-                    current["sys"]["sunrise"]
-                )
-                + timedelta(seconds=timezone)
-            ).strftime("%I:%M %p")
-
-            sunset = (
-                datetime.utcfromtimestamp(
-                    current["sys"]["sunset"]
-                )
-                + timedelta(seconds=timezone)
-            ).strftime("%I:%M %p")
-
-            st.subheader("🌅 Sun Timing")
-
-            s1, s2 = st.columns(2)
-
-            s1.markdown(
-                f"""
-                <div class="card">
-                    <h3>🌅 Sunrise</h3>
-                    <h2>{sunrise}</h2>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-            s2.markdown(
-                f"""
-                <div class="card">
-                    <h3>🌇 Sunset</h3>
-                    <h2>{sunset}</h2>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-            st.write("")
-
-            # =====================================================
-            # HOURLY FORECAST
-            # =====================================================
+            # FORECAST
             st.subheader("⏰ Hourly Forecast")
 
-            hourly = forecast["list"][:6]
+            forecast_items = forecast["list"][:6]
 
-            forecast_cols = st.columns(6)
+            cols = st.columns(6)
 
-            for col, item in zip(forecast_cols, hourly):
+            for col, item in zip(cols, forecast_items):
 
-                forecast_time = (
-                    datetime.utcfromtimestamp(
-                        item["dt"]
-                    )
+                f_time = (
+                    datetime.utcfromtimestamp(item["dt"])
                     + timedelta(seconds=timezone)
                 )
 
-                f_hour = forecast_time.hour
+                f_hour = f_time.hour
 
-                display_time = forecast_time.strftime(
-                    "%I %p"
-                )
+                display_time = f_time.strftime("%I %p")
 
-                f_temp = round(
-                    item["main"]["temp"]
-                )
+                f_temp = round(item["main"]["temp"])
 
-                f_weather = item[
-                    "weather"
-                ][0]["description"]
+                f_weather = item["weather"][0]["description"]
 
                 f_icon = get_icon(
                     f_weather,
@@ -440,62 +358,11 @@ if city:
                     unsafe_allow_html=True
                 )
 
-            st.write("")
-
-            # =====================================================
-            # PREDICTION
-            # =====================================================
-            if st.button("🔮 Predict Tomorrow Weather"):
-
-                prediction = "☀️ Sunny Tomorrow"
-
-                if "rain" in weather:
-                    prediction = "🌧 Rain Expected Tomorrow"
-
-                elif "cloud" in weather:
-                    prediction = "☁️ Cloudy Tomorrow"
-
-                elif "thunder" in weather:
-                    prediction = "⛈ Storm Chances Tomorrow"
-
-                elif temp > 35:
-                    prediction = "🥵 Very Hot Tomorrow"
-
-                elif temp < 18:
-                    prediction = "❄️ Cold Tomorrow"
-
-                st.markdown(
-                    f"""
-                    <div class="glass">
-
-                        <h1 style="text-align:center;">
-                            {prediction}
-                        </h1>
-
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
         else:
             st.error("City not found")
 
+    except requests.exceptions.Timeout:
+        st.error("Request timed out")
+
     except Exception as e:
         st.error(f"Error: {e}")
-
-# =====================================================
-# FOOTER
-# =====================================================
-st.markdown("""
-<div style="
-text-align:center;
-padding:20px;
-font-size:18px;
-font-weight:bold;
-">
-🌟 Designed By
-<span style="color:#FFD700;">
-Samyak M
-</span>
-</div>
-""", unsafe_allow_html=True)

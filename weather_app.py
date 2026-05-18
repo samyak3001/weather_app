@@ -638,7 +638,7 @@ if city.strip():
             st.markdown(
                 """
                 ---
-                ### 🌦 iWeather Pro
+                ### 🌦 iWeather 
                 Made by Samyak M
                 """
             )

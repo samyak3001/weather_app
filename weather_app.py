@@ -19,50 +19,117 @@ st.set_page_config(
 # =========================================================
 # 🎨 SMART WEATHER BACKGROUND
 # =========================================================
-def get_background(weather, temp, current_hour):
+def get_background(weather, current_hour):
 
     weather = weather.lower()
 
     # 🌙 CLEAR NIGHT
     if "clear" in weather and (current_hour >= 18 or current_hour <= 5):
-        return "https://images.unsplash.com/photo-1506744038136-46273834b3fb"
+        return "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1920&q=80"
 
     # ☀️ SUNNY DAY
     elif "clear" in weather:
-        return "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"
+        return "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1920&q=80"
 
     # ☁️ CLOUDY
     elif "cloud" in weather:
-        return "https://images.unsplash.com/photo-1499346030926-9a72daac6c63"
+        return "https://images.unsplash.com/photo-1499346030926-9a72daac6c63?w=1920&q=80"
 
     # 🌧 RAIN
     elif "rain" in weather or "drizzle" in weather:
-        return "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0"
+        return "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=1920&q=80"
 
     # ⛈ THUNDERSTORM
     elif "thunder" in weather:
-        return "https://images.unsplash.com/photo-1500673922987-e212871fec22"
+        return "https://images.unsplash.com/photo-1500673922987-e212871fec22?w=1920&q=80"
 
-    # 🌫 HAZE / MIST / FOG
+    # 🌫 HAZE / FOG / MIST
     elif (
         "mist" in weather
         or "fog" in weather
         or "haze" in weather
         or "smoke" in weather
     ):
-        return "https://images.unsplash.com/photo-1485236715568-ddc5ee6ca227"
+        return "https://images.unsplash.com/photo-1485236715568-ddc5ee6ca227?w=1920&q=80"
 
     # ❄️ SNOW
     elif "snow" in weather:
-        return "https://images.unsplash.com/photo-1517299321609-52687d1bc55a"
+        return "https://images.unsplash.com/photo-1517299321609-52687d1bc55a?w=1920&q=80"
 
     # 🌤 DEFAULT
     else:
-        return "https://images.unsplash.com/photo-1502082553048-f009c37129b9"
+        return "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1920&q=80"
 
 
 # =========================================================
-# 🎨 MODERN UI CSS
+# 🌤 WEATHER EMOJI
+# =========================================================
+def get_weather_icon(weather):
+
+    weather = weather.lower()
+
+    if "cloud" in weather:
+        return "☁️"
+
+    elif "rain" in weather:
+        return "🌧"
+
+    elif "thunder" in weather:
+        return "⛈"
+
+    elif "mist" in weather or "fog" in weather:
+        return "🌫"
+
+    elif "snow" in weather:
+        return "❄️"
+
+    return "☀️"
+
+
+# =========================================================
+# 🚀 CACHE API
+# =========================================================
+@st.cache_data(ttl=600)
+def get_geo_data(city):
+
+    geo_url = (
+        f"https://api.openweathermap.org/geo/1.0/direct?"
+        f"q={city}&limit=5&appid={API_KEY}"
+    )
+
+    response = requests.get(geo_url, timeout=10)
+
+    return response.json()
+
+
+@st.cache_data(ttl=600)
+def get_weather_data(lat, lon):
+
+    weather_url = (
+        f"https://api.openweathermap.org/data/2.5/weather?"
+        f"lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
+    )
+
+    forecast_url = (
+        f"https://api.openweathermap.org/data/2.5/forecast?"
+        f"lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
+    )
+
+    weather_data = requests.get(
+        weather_url,
+        timeout=10
+    ).json()
+
+    forecast_data = requests.get(
+        forecast_url,
+        timeout=10
+    ).json()
+
+    return weather_data, forecast_data
+
+
+# =========================================================
+# 🎨 MODERN CSS
 # =========================================================
 st.markdown("""
 <style>
@@ -72,18 +139,10 @@ st.markdown("""
 ========================= */
 
 html, body, [class*="css"] {
+
     font-family: 'Poppins', sans-serif;
+
     color: white;
-}
-
-/* =========================
-   MAIN APP
-========================= */
-
-.stApp {
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
 }
 
 /* =========================
@@ -95,29 +154,51 @@ footer {visibility: hidden;}
 header {visibility: hidden;}
 
 /* =========================
+   MAIN APP
+========================= */
+
+.stApp {
+
+    background-size: cover;
+
+    background-position: center;
+
+    background-repeat: no-repeat;
+
+    background-attachment: fixed;
+}
+
+/* =========================
    TITLE
 ========================= */
 
 .main-title {
+
     text-align: center;
-    font-size: 64px;
+
+    font-size: clamp(42px, 6vw, 72px);
+
     font-weight: 700;
+
     margin-top: 10px;
-    margin-bottom: 20px;
+
+    margin-bottom: 25px;
 
     text-shadow:
-        0px 4px 20px rgba(0,0,0,0.4);
+        0px 4px 20px rgba(0,0,0,0.5);
+
+    animation: fadeIn 1s ease-in-out;
 }
 
 /* =========================
-   SEARCH INPUT
+   SEARCH BAR
 ========================= */
 
 .stTextInput > div > div > input {
 
-    background: rgba(255,255,255,0.15);
+    background: rgba(25,25,35,0.45);
 
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.18);
 
     color: white;
 
@@ -127,7 +208,12 @@ header {visibility: hidden;}
 
     font-size: 18px;
 
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(14px);
+}
+
+/* Placeholder */
+::placeholder {
+    color: rgba(255,255,255,0.7);
 }
 
 /* =========================
@@ -136,55 +222,40 @@ header {visibility: hidden;}
 
 .stSelectbox > div > div {
 
-    background: rgba(255,255,255,0.15);
+    background: rgba(25,25,35,0.45);
 
     border-radius: 18px;
 
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.18);
 
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(14px);
 }
 
 /* =========================
-   GLASS CARD
+   MAIN GLASS CARD
 ========================= */
 
 .glass {
 
-    background: rgba(255,255,255,0.12);
+    background: rgba(25,25,35,0.45);
 
     border: 1px solid rgba(255,255,255,0.18);
 
-    backdrop-filter: blur(16px);
+    backdrop-filter: blur(18px);
 
-    -webkit-backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(18px);
 
-    border-radius: 28px;
+    border-radius: 30px;
 
-    padding: 25px;
+    padding: 30px;
 
     box-shadow:
         0 8px 32px rgba(0,0,0,0.25);
-}
 
-/* =========================
-   TEMPERATURE
-========================= */
+    text-shadow:
+        1px 1px 8px rgba(0,0,0,0.5);
 
-.temp {
-    font-size: 120px;
-    font-weight: 300;
-    text-align: center;
-}
-
-/* =========================
-   WEATHER TEXT
-========================= */
-
-.weather-text {
-    text-align: center;
-    font-size: 32px;
-    font-weight: 600;
+    animation: fadeIn 0.8s ease-in-out;
 }
 
 /* =========================
@@ -193,19 +264,50 @@ header {visibility: hidden;}
 
 .detail-card {
 
-    background: rgba(255,255,255,0.12);
+    background: rgba(25,25,35,0.45);
 
     border: 1px solid rgba(255,255,255,0.15);
 
-    backdrop-filter: blur(14px);
+    backdrop-filter: blur(16px);
 
-    border-radius: 22px;
+    border-radius: 24px;
 
-    padding: 20px;
+    padding: 18px;
 
     text-align: center;
 
     margin-top: 10px;
+
+    text-shadow:
+        1px 1px 8px rgba(0,0,0,0.5);
+
+    animation: fadeIn 1s ease-in-out;
+}
+
+/* =========================
+   TEMPERATURE
+========================= */
+
+.temp {
+
+    font-size: clamp(70px, 12vw, 120px);
+
+    font-weight: 300;
+
+    text-align: center;
+}
+
+/* =========================
+   WEATHER TEXT
+========================= */
+
+.weather-text {
+
+    text-align: center;
+
+    font-size: 32px;
+
+    font-weight: 600;
 }
 
 /* =========================
@@ -218,7 +320,7 @@ header {visibility: hidden;}
 
     height: 60px;
 
-    border-radius: 18px;
+    border-radius: 20px;
 
     background: linear-gradient(
         135deg,
@@ -248,11 +350,28 @@ header {visibility: hidden;}
     );
 }
 
+/* =========================
+   ANIMATION
+========================= */
+
+@keyframes fadeIn {
+
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 🌤 APP TITLE
+# 🌤 TITLE
 # =========================================================
 st.markdown(
     "<div class='main-title'>🌤 iWeather</div>",
@@ -278,55 +397,39 @@ if search_city:
 
     try:
 
-        geo_url = (
-            f"https://api.openweathermap.org/geo/1.0/direct?"
-            f"q={search_city}&limit=5&appid={API_KEY}"
-        )
+        with st.spinner("🔍 Searching city..."):
 
-        geo_response = requests.get(
-            geo_url,
-            timeout=10
-        )
+            geo_data = get_geo_data(search_city)
 
-        if geo_response.status_code == 200:
+        if geo_data:
 
-            geo_data = geo_response.json()
+            options = [
+                f"{c['name']}, {c.get('state','')}, {c['country']}".replace(" ,", "")
+                for c in geo_data
+            ]
 
-            if geo_data:
+            if len(options) == 1:
 
-                options = [
-                    f"{c['name']}, {c.get('state','')}, {c['country']}".replace(" ,", "")
-                    for c in geo_data
-                ]
+                selected_city_name = options[0]
 
-                # =========================================================
-                # SINGLE CITY
-                # =========================================================
-                if len(options) == 1:
-
-                    selected_city_name = options[0]
-
-                    selected_city = geo_data[0]
-
-                else:
-
-                    selected_city_name = st.selectbox(
-                        "🌍 Select Location",
-                        options
-                    )
-
-                    selected_city = geo_data[
-                        options.index(selected_city_name)
-                    ]
-
-                lat = selected_city["lat"]
-                lon = selected_city["lon"]
+                selected_city = geo_data[0]
 
             else:
-                st.warning("⚠️ City not found")
+
+                selected_city_name = st.selectbox(
+                    "🌍 Select Location",
+                    options
+                )
+
+                selected_city = geo_data[
+                    options.index(selected_city_name)
+                ]
+
+            lat = selected_city["lat"]
+            lon = selected_city["lon"]
 
         else:
-            st.error("❌ Failed to fetch location")
+            st.warning("⚠️ City not found")
 
     except requests.exceptions.Timeout:
         st.error("⏳ Request timed out")
@@ -335,36 +438,18 @@ if search_city:
         st.error(f"❌ Error: {e}")
 
 # =========================================================
-# 🌦 WEATHER SECTION
+# 🌦 WEATHER DATA
 # =========================================================
 if lat is not None and lon is not None:
 
     try:
 
-        # WEATHER API
-        weather_url = (
-            f"https://api.openweathermap.org/data/2.5/weather?"
-            f"lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
-        )
+        with st.spinner("🌤 Fetching weather data..."):
 
-        # FORECAST API
-        forecast_url = (
-            f"https://api.openweathermap.org/data/2.5/forecast?"
-            f"lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
-        )
-
-        weather_response = requests.get(
-            weather_url,
-            timeout=10
-        )
-
-        forecast_response = requests.get(
-            forecast_url,
-            timeout=10
-        )
-
-        data = weather_response.json()
-        forecast_data = forecast_response.json()
+            data, forecast_data = get_weather_data(
+                lat,
+                lon
+            )
 
         if data.get("cod") == 200:
 
@@ -388,7 +473,7 @@ if lat is not None and lon is not None:
             timezone_offset = data["timezone"]
 
             # =========================================================
-            # 🕒 LOCAL TIME
+            # LOCAL TIME
             # =========================================================
             utc_time = datetime.utcnow()
 
@@ -407,11 +492,10 @@ if lat is not None and lon is not None:
             current_hour = local_time.hour
 
             # =========================================================
-            # 🎨 DYNAMIC BACKGROUND
+            # BACKGROUND
             # =========================================================
             bg = get_background(
                 weather,
-                temp,
                 current_hour
             )
 
@@ -421,8 +505,8 @@ if lat is not None and lon is not None:
             .stApp {{
                 background:
                     linear-gradient(
-                        rgba(0,0,0,0.35),
-                        rgba(0,0,0,0.35)
+                        rgba(0,0,0,0.40),
+                        rgba(0,0,0,0.40)
                     ),
                     url("{bg}");
 
@@ -439,12 +523,19 @@ if lat is not None and lon is not None:
             """, unsafe_allow_html=True)
 
             # =========================================================
-            # 🌤 MAIN WEATHER CARD
+            # WEATHER ICON
+            # =========================================================
+            weather_icon = get_weather_icon(weather)
+
+            # =========================================================
+            # MAIN CARD
             # =========================================================
             st.markdown("<div class='glass'>", unsafe_allow_html=True)
 
             st.markdown(
-                f"<h1 style='text-align:center;'>📍 {selected_city_name}</h1>",
+                f"<h1 style='text-align:center;'>"
+                f"{weather_icon} {selected_city_name}"
+                f"</h1>",
                 unsafe_allow_html=True
             )
 
@@ -487,11 +578,12 @@ if lat is not None and lon is not None:
             st.write("")
 
             # =========================================================
-            # 📊 WEATHER DETAILS
+            # DETAILS
             # =========================================================
             st.subheader("📊 Weather Details")
 
-            c1, c2, c3, c4, c5 = st.columns(5)
+            row1 = st.columns(3)
+            row2 = st.columns(2)
 
             cards = [
                 ("💧 Humidity", f"{humidity}%"),
@@ -502,8 +594,20 @@ if lat is not None and lon is not None:
             ]
 
             for col, (title, value) in zip(
-                [c1, c2, c3, c4, c5],
-                cards
+                row1,
+                cards[:3]
+            ):
+
+                col.markdown(f"""
+                <div class='detail-card'>
+                    <h3>{title}</h3>
+                    <h2>{value}</h2>
+                </div>
+                """, unsafe_allow_html=True)
+
+            for col, (title, value) in zip(
+                row2,
+                cards[3:]
             ):
 
                 col.markdown(f"""
@@ -516,7 +620,7 @@ if lat is not None and lon is not None:
             st.write("")
 
             # =========================================================
-            # 🌅 SUNRISE & SUNSET
+            # SUNRISE / SUNSET
             # =========================================================
             sunrise = (
                 datetime.utcfromtimestamp(
@@ -553,73 +657,92 @@ if lat is not None and lon is not None:
             st.write("")
 
             # =========================================================
-            # ⏰ HOURLY FORECAST
+            # HOURLY FORECAST
             # =========================================================
             st.subheader("⏰ Hourly Forecast")
 
-            cols = st.columns(6)
+            forecast_items = forecast_data["list"][:6]
 
-            for i, item in enumerate(
-                forecast_data["list"][:6]
+            for i in range(
+                0,
+                len(forecast_items),
+                3
             ):
 
-                time = (
-                    datetime.utcfromtimestamp(item["dt"])
-                    + timedelta(seconds=timezone_offset)
-                ).strftime("%I %p")
+                row = st.columns(3)
 
-                t = round(item["main"]["temp"])
+                for col, item in zip(
+                    row,
+                    forecast_items[i:i+3]
+                ):
 
-                w = item["weather"][0]["main"]
+                    time = (
+                        datetime.utcfromtimestamp(
+                            item["dt"]
+                        )
+                        + timedelta(
+                            seconds=timezone_offset
+                        )
+                    ).strftime("%I %p")
 
-                icon = "☀️"
+                    t = round(
+                        item["main"]["temp"]
+                    )
 
-                if "cloud" in w.lower():
-                    icon = "☁️"
+                    w = item["weather"][0]["main"]
 
-                elif "rain" in w.lower():
-                    icon = "🌧"
+                    icon = get_weather_icon(w)
 
-                elif "thunder" in w.lower():
-                    icon = "⛈"
-
-                elif "snow" in w.lower():
-                    icon = "❄️"
-
-                cols[i].markdown(f"""
-                <div class='detail-card'>
-                    <h4>{time}</h4>
-                    <h1>{icon}</h1>
-                    <h3>{t}°</h3>
-                </div>
-                """, unsafe_allow_html=True)
+                    col.markdown(f"""
+                    <div class='detail-card'>
+                        <h4>{time}</h4>
+                        <div style='font-size:55px'>
+                            {icon}
+                        </div>
+                        <h3>{t}°</h3>
+                    </div>
+                    """, unsafe_allow_html=True)
 
             st.write("")
 
             # =========================================================
-            # 🔮 WEATHER PREDICTION
+            # PREDICTION
             # =========================================================
-            if st.button("🔮 Predict Tomorrow Weather"):
+            if st.button(
+                "🔮 Predict Tomorrow Weather"
+            ):
 
                 prediction = "☀️ Sunny Tomorrow"
 
                 if "rain" in weather.lower():
-                    prediction = "🌧 Rain Expected Tomorrow"
+                    prediction = (
+                        "🌧 Rain Expected Tomorrow"
+                    )
 
                 elif "thunder" in weather.lower():
-                    prediction = "⛈ Thunderstorm Chances Tomorrow"
+                    prediction = (
+                        "⛈ Thunderstorm Chances Tomorrow"
+                    )
 
                 elif humidity > 85 and wind_speed > 7:
-                    prediction = "⛈ Storm Chances Tomorrow"
+                    prediction = (
+                        "⛈ Storm Chances Tomorrow"
+                    )
 
                 elif humidity > 70:
-                    prediction = "☁️ Cloudy Weather Tomorrow"
+                    prediction = (
+                        "☁️ Cloudy Weather Tomorrow"
+                    )
 
                 elif temp > 35:
-                    prediction = "🥵 Very Hot Weather Tomorrow"
+                    prediction = (
+                        "🥵 Very Hot Weather Tomorrow"
+                    )
 
                 elif temp < 18:
-                    prediction = "❄️ Cold Weather Tomorrow"
+                    prediction = (
+                        "❄️ Cold Weather Tomorrow"
+                    )
 
                 st.markdown(f"""
                 <div class='glass'>
@@ -650,6 +773,9 @@ padding:20px;
 font-size:18px;
 font-weight:600;
 '>
-🌟 Designed By <span style='color:#FFD700;'>Samyak M</span>
+🌟 Designed By
+<span style='color:#FFD700;'>
+Samyak M
+</span>
 </div>
 """, unsafe_allow_html=True)

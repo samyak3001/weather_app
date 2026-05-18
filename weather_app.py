@@ -1,4 +1,3 @@
-
 import streamlit as st
 import requests
 from datetime import datetime, timedelta
@@ -18,27 +17,46 @@ st.set_page_config(
 )
 
 # =========================================================
-# 🎨 BACKGROUND IMAGES
+# 🎨 SMART WEATHER BACKGROUND
 # =========================================================
-def get_background(weather, temp):
+def get_background(weather, temp, current_hour):
 
     weather = weather.lower()
 
-    if "thunder" in weather:
-        return "https://images.unsplash.com/photo-1500673922987-e212871fec22"
+    # 🌙 CLEAR NIGHT
+    if "clear" in weather and (current_hour >= 18 or current_hour <= 5):
+        return "https://images.unsplash.com/photo-1506744038136-46273834b3fb"
 
-    elif "rain" in weather:
-        return "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0"
+    # ☀️ SUNNY DAY
+    elif "clear" in weather:
+        return "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"
 
+    # ☁️ CLOUDY
     elif "cloud" in weather:
         return "https://images.unsplash.com/photo-1499346030926-9a72daac6c63"
 
-    elif "mist" in weather or "fog" in weather:
+    # 🌧 RAIN
+    elif "rain" in weather or "drizzle" in weather:
+        return "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0"
+
+    # ⛈ THUNDERSTORM
+    elif "thunder" in weather:
+        return "https://images.unsplash.com/photo-1500673922987-e212871fec22"
+
+    # 🌫 HAZE / MIST / FOG
+    elif (
+        "mist" in weather
+        or "fog" in weather
+        or "haze" in weather
+        or "smoke" in weather
+    ):
         return "https://images.unsplash.com/photo-1485236715568-ddc5ee6ca227"
 
-    elif temp > 32:
-        return "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"
+    # ❄️ SNOW
+    elif "snow" in weather:
+        return "https://images.unsplash.com/photo-1517299321609-52687d1bc55a"
 
+    # 🌤 DEFAULT
     else:
         return "https://images.unsplash.com/photo-1502082553048-f009c37129b9"
 
@@ -85,14 +103,14 @@ header {visibility: hidden;}
     font-size: 64px;
     font-weight: 700;
     margin-top: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
 
     text-shadow:
         0px 4px 20px rgba(0,0,0,0.4);
 }
 
 /* =========================
-   SEARCH
+   SEARCH INPUT
 ========================= */
 
 .stTextInput > div > div > input {
@@ -150,7 +168,7 @@ header {visibility: hidden;}
 }
 
 /* =========================
-   TEMP
+   TEMPERATURE
 ========================= */
 
 .temp {
@@ -160,7 +178,7 @@ header {visibility: hidden;}
 }
 
 /* =========================
-   WEATHER
+   WEATHER TEXT
 ========================= */
 
 .weather-text {
@@ -170,7 +188,7 @@ header {visibility: hidden;}
 }
 
 /* =========================
-   DETAILS
+   DETAIL CARDS
 ========================= */
 
 .detail-card {
@@ -234,7 +252,7 @@ header {visibility: hidden;}
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 🌤 TITLE
+# 🌤 APP TITLE
 # =========================================================
 st.markdown(
     "<div class='main-title'>🌤 iWeather</div>",
@@ -323,11 +341,13 @@ if lat is not None and lon is not None:
 
     try:
 
+        # WEATHER API
         weather_url = (
             f"https://api.openweathermap.org/data/2.5/weather?"
             f"lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
         )
 
+        # FORECAST API
         forecast_url = (
             f"https://api.openweathermap.org/data/2.5/forecast?"
             f"lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
@@ -368,9 +388,32 @@ if lat is not None and lon is not None:
             timezone_offset = data["timezone"]
 
             # =========================================================
-            # 🎨 BACKGROUND
+            # 🕒 LOCAL TIME
             # =========================================================
-            bg = get_background(weather, temp)
+            utc_time = datetime.utcnow()
+
+            local_time = utc_time + timedelta(
+                seconds=timezone_offset
+            )
+
+            current_time = local_time.strftime(
+                "%I:%M %p"
+            )
+
+            current_date = local_time.strftime(
+                "%A, %d %B"
+            )
+
+            current_hour = local_time.hour
+
+            # =========================================================
+            # 🎨 DYNAMIC BACKGROUND
+            # =========================================================
+            bg = get_background(
+                weather,
+                temp,
+                current_hour
+            )
 
             st.markdown(f"""
             <style>
@@ -394,23 +437,6 @@ if lat is not None and lon is not None:
 
             </style>
             """, unsafe_allow_html=True)
-
-            # =========================================================
-            # 🕒 LOCAL TIME
-            # =========================================================
-            utc_time = datetime.utcnow()
-
-            local_time = utc_time + timedelta(
-                seconds=timezone_offset
-            )
-
-            current_time = local_time.strftime(
-                "%I:%M %p"
-            )
-
-            current_date = local_time.strftime(
-                "%A, %d %B"
-            )
 
             # =========================================================
             # 🌤 MAIN WEATHER CARD
@@ -461,7 +487,7 @@ if lat is not None and lon is not None:
             st.write("")
 
             # =========================================================
-            # 📊 DETAILS
+            # 📊 WEATHER DETAILS
             # =========================================================
             st.subheader("📊 Weather Details")
 
@@ -527,7 +553,7 @@ if lat is not None and lon is not None:
             st.write("")
 
             # =========================================================
-            # ⏰ FORECAST
+            # ⏰ HOURLY FORECAST
             # =========================================================
             st.subheader("⏰ Hourly Forecast")
 
@@ -556,6 +582,9 @@ if lat is not None and lon is not None:
 
                 elif "thunder" in w.lower():
                     icon = "⛈"
+
+                elif "snow" in w.lower():
+                    icon = "❄️"
 
                 cols[i].markdown(f"""
                 <div class='detail-card'>

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 # =========================
 # 🔑 API KEY
 # =========================
-API_KEY ="96c73ea634856d67ace6716d27c2662e"
+API_KEY = "96c73ea634856d67ace6716d27c2662e"
 
 # =========================
 # PAGE CONFIG
@@ -20,6 +20,7 @@ st.set_page_config(
 # 🎨 BACKGROUND FUNCTION
 # =========================
 def get_bg(weather, temp):
+
     weather = weather.lower()
 
     if "thunder" in weather:
@@ -42,7 +43,7 @@ def get_bg(weather, temp):
 
 
 # =========================
-# 🎨 CSS STYLING
+# 🎨 CSS
 # =========================
 st.markdown("""
 <style>
@@ -53,13 +54,13 @@ st.markdown("""
 
 .title {
     text-align: center;
-    font-size: 48px;
+    font-size: 55px;
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: 25px;
 }
 
 .temp {
-    font-size: 90px;
+    font-size: 95px;
     text-align: center;
     font-weight: 300;
     margin-top: -10px;
@@ -76,11 +77,11 @@ st.markdown("""
     border-radius: 20px;
     text-align: center;
     margin: 5px;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.3);
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.3);
 }
 
 .prediction-card {
-    background: rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.15);
     backdrop-filter: blur(14px);
     padding: 25px;
     border-radius: 25px;
@@ -100,10 +101,12 @@ st.markdown("""
     background: rgba(255,255,255,0.2);
     color: white;
     border: none;
+    transition: 0.3s;
 }
 
 .stButton > button:hover {
     background: rgba(255,255,255,0.35);
+    transform: scale(1.02);
 }
 
 </style>
@@ -171,19 +174,19 @@ if search:
         st.error(f"Error: {e}")
 
 # =========================
-# 🌦 WEATHER SECTION
+# 🌦 WEATHER DATA
 # =========================
 if lat is not None and lon is not None:
 
     try:
 
-        # Current Weather API
+        # Current Weather
         weather_url = (
             f"https://api.openweathermap.org/data/2.5/weather?"
             f"lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
         )
 
-        # Forecast API
+        # Forecast
         forecast_url = (
             f"https://api.openweathermap.org/data/2.5/forecast?"
             f"lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
@@ -195,7 +198,7 @@ if lat is not None and lon is not None:
         if data.get("cod") == 200:
 
             # =========================
-            # WEATHER DATA
+            # WEATHER DETAILS
             # =========================
             temp = data["main"]["temp"]
             humidity = data["main"]["humidity"]
@@ -212,7 +215,7 @@ if lat is not None and lon is not None:
             timezone_offset = data["timezone"]
 
             # =========================
-            # 🎨 DYNAMIC BACKGROUND
+            # 🎨 BACKGROUND
             # =========================
             bg = get_bg(weather, temp)
 
@@ -277,7 +280,9 @@ if lat is not None and lon is not None:
             )
 
             st.markdown(
-                f"<div class='center' style='font-size:24px;'>{weather.title()}</div>",
+                f"<div class='center' style='font-size:24px;'>"
+                f"{weather.title()}"
+                f"</div>",
                 unsafe_allow_html=True
             )
 
@@ -404,6 +409,9 @@ if lat is not None and lon is not None:
 
                 if "rain" in weather.lower():
                     prediction = "🌧 Rain Expected Tomorrow"
+
+                elif "thunder" in weather.lower():
+                    prediction = "⛈ Thunderstorm Chances Tomorrow"
 
                 elif humidity > 85 and wind_speed > 7:
                     prediction = "⛈ Storm Chances Tomorrow"

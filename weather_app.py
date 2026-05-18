@@ -209,7 +209,7 @@ h1, h2, h3, h4, p, label {
 # =========================================================
 # TITLE
 # =========================================================
-st.title("🌦 iWeather Pro")
+st.title("🌦 iWeather")
 
 st.caption("Real-Time Smart Weather Dashboard")
 
